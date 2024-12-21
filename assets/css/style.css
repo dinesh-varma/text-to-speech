@@ -208,6 +208,10 @@ h1,h2,h3,h4,h5,h6{
 .theme-btn.btn-one:hover{
   background: var(--secondary-color);
 }
+.theme-btn.btn-one:disabled{
+  background: var(--secondary-color);
+}
+
 
 .theme-btn:before{
   position: absolute;

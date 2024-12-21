@@ -1,45 +1,71 @@
+const synth = window.speechSynthesis;
+let utterance = new SpeechSynthesisUtterance();
+// Select a voice
+let selVoice = '';
+let voices = synth.getVoices();
+if (voices.length > 0) {
+  for (let i = 0; i < voices.length; i++) {
+    if (voices[i].name === 'Google US English') {
+      selVoice = voices[i]; // Choose a specific voice
+      break;
+    }
+  }
+}
+
 function speak() {
 
-  const synth = window.speechSynthesis;
+  document.getElementById("convert").disabled = true;
 
   let speaTxt = document.getElementById("speachTxt").value;
   speaTxt = speaTxt.replace(/(\r\n|\n|\r)/gm, " ");
-  let words = speaTxt;
   
   async function* speachTextAsync(words) {
-    const maxLength = 40;
+    const maxLength = 20;
     let newTxt = words.split(' ');
+
     for (let i = 0; i < newTxt.length; i += maxLength) {
       text = newTxt.slice(i, i + maxLength);
       text = text.join(' ');
 
-      let utterance = new SpeechSynthesisUtterance();
-      
-      // Select a voice
-      let voices = synth.getVoices();
-      if (voices.length > 0) {
-        for (let i = 0; i < voices.length; i++) {
-          if (voices[i].name === 'Google US English') {
-            utterance.voice = voices[i]; // Choose a specific voice
-            break;
-          }
-        }
+      if (selVoice != '') {
+        utterance.voice = selVoice;
       }
-
-      speechSynthesis.cancel();
       utterance.text = text;
-      speechSynthesis.speak(utterance);    
-      yield new Promise((resolve) => utterance.onend = resolve);      
+
+      synth.cancel();      
+      synth.speak(utterance);
+
+      utterance.onstart = function() {
+        console.log("Speech synthesis has started.");
+      };    
+      utterance.onerror = function(event) {
+        document.getElementById("convert").disabled = false;
+      };
+
+      yield new Promise(function(resolve, reject){
+        utterance.onend = function() {
+          if (i + maxLength >= newTxt.length) {
+            resolve('success');
+          }else{
+            resolve('working');
+          }
+          
+        };
+      });      
     }
   }
 
+  
   async function processText(text) {
     const asyncTxt = speachTextAsync(text);
     for await (const chunk of asyncTxt) {
-      //- console.log(chunk);
+      if (chunk == 'success') {
+        document.getElementById("convert").disabled = false;
+      }
     }
   }
 
   processText(speaTxt);
+  
 
 }
